@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sahel Information Environment Monitor</title>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.css" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #07131b;
+        --panel: rgba(10, 24, 32, 0.9);
+        --panel-border: rgba(255, 255, 255, 0.08);
+        --text: #ecf4f7;
+        --muted: #98afb9;
+        --accent: #d9e7ed;
+        --danger: #e53935;
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.32);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        color: var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(41, 89, 120, 0.25), transparent 32%),
+          radial-gradient(circle at bottom right, rgba(229, 57, 53, 0.16), transparent 28%),
+          var(--bg);
+      }
+
+      #app-shell {
+        position: relative;
+        min-height: 100vh;
+      }
+
+      #map {
+        position: absolute;
+        inset: 0;
+      }
+
+      .overlay {
+        position: absolute;
+        z-index: 2;
+        backdrop-filter: blur(12px);
+        background: var(--panel);
+        border: 1px solid var(--panel-border);
+        box-shadow: var(--shadow);
+      }
+
+      .topbar {
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 18px;
+        border-radius: 22px;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 1.05rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .brand p,
+      .status-line {
+        margin: 4px 0 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .timeline {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      button,
+      input[type="date"],
+      input[type="text"],
+      input[type="password"] {
+        font: inherit;
+      }
+
+      .nav-btn,
+      .filter-chip,
+      .login-form button,
+      .logout-btn {
+        border: 0;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text);
+        cursor: pointer;
+        transition: transform 140ms ease, background 140ms ease, opacity 140ms ease;
+      }
+
+      .nav-btn:hover,
+      .filter-chip:hover,
+      .login-form button:hover,
+      .logout-btn:hover {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.18);
+      }
+
+      .nav-btn {
+        width: 40px;
+        height: 40px;
+      }
+
+      .date-pill,
+      .latest-pill {
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        white-space: nowrap;
+      }
+
+      .filters {
+        left: 20px;
+        bottom: 24px;
+        width: min(340px, calc(100vw - 40px));
+        padding: 18px;
+        border-radius: 24px;
+      }
+
+      .filters h2 {
+        margin: 0 0 6px;
+        font-size: 1rem;
+      }
+
+      .filters-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 14px;
+      }
+
+      .filter-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 9px;
+        padding: 10px 14px;
+      }
+
+      .filter-chip.disabled {
+        opacity: 0.4;
+      }
+
+      .filter-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+
+      .login-wrap {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        z-index: 4;
+        padding: 24px;
+        background: rgba(7, 19, 27, 0.58);
+      }
+
+      .login-form {
+        width: min(420px, 100%);
+        padding: 28px;
+        border-radius: 28px;
+      }
+
+      .login-form h2 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 1.5rem;
+      }
+
+      .login-form p {
+        margin-top: 0;
+        color: var(--muted);
+      }
+
+      .login-form label {
+        display: block;
+        margin-top: 14px;
+        margin-bottom: 6px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .login-form input {
+        width: 100%;
+        padding: 13px 15px;
+        color: var(--text);
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+      }
+
+      .login-form button {
+        width: 100%;
+        margin-top: 18px;
+        padding: 13px 16px;
+        background: linear-gradient(135deg, rgba(229, 57, 53, 0.9), rgba(62, 116, 146, 0.95));
+      }
+
+      .error-text {
+        min-height: 1.2em;
+        color: #ffb4aa;
+        margin-top: 10px;
+        font-size: 0.92rem;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      .loading-pill {
+        position: absolute;
+        right: 20px;
+        bottom: 24px;
+        z-index: 2;
+        padding: 11px 14px;
+        border-radius: 999px;
+      }
+
+      .mapboxgl-popup-content {
+        background: #10202b;
+        color: var(--text);
+        border-radius: 18px;
+        padding: 16px;
+        box-shadow: var(--shadow);
+      }
+
+      .mapboxgl-popup-close-button {
+        color: var(--text);
+      }
+
+      @media (max-width: 780px) {
+        .topbar {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .timeline {
+          width: 100%;
+        }
+
+        .date-pill,
+        .latest-pill,
+        input[type="date"] {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app-shell">
+      <div id="map"></div>
+
+      <section class="overlay topbar">
+        <div class="brand">
+          <h1>Sahel Information Environment Monitor</h1>
+          <p>Conflict event map for Mali, Burkina Faso, and Niger</p>
+        </div>
+        <div class="timeline">
+          <button class="nav-btn" id="prev-window" aria-label="Previous day">◄</button>
+          <div class="date-pill" id="date-window-label">Loading window…</div>
+          <button class="nav-btn" id="next-window" aria-label="Next day">►</button>
+          <input type="date" id="date-picker" />
+          <div class="latest-pill" id="latest-date-label">Loading metadata…</div>
+          <button class="logout-btn hidden" id="logout-btn">Log out</button>
+        </div>
+      </section>
+
+      <section class="overlay filters hidden" id="filters-panel">
+        <h2>Event Types</h2>
+        <p class="status-line">Use the toggles to focus the current 7-day window.</p>
+        <div class="filters-grid" id="filters-grid"></div>
+      </section>
+
+      <div class="overlay loading-pill hidden" id="loading-pill">Loading events…</div>
+
+      <div class="login-wrap" id="login-wrap">
+        <form class="overlay login-form" id="login-form">
+          <h2>Restricted Access</h2>
+          <p>Authorized academic users only. The application stores a 7-day session token in your browser.</p>
+          <label for="username">Username</label>
+          <input id="username" name="username" autocomplete="username" required />
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+          <button type="submit">Sign in</button>
+          <div class="error-text" id="login-error"></div>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.12.0/mapbox-gl.js"></script>
+    <script>
+      const MAPBOX_TOKEN = "__MAPBOX_TOKEN__";
+      const MAPBOX_STYLE = "__MAPBOX_STYLE__";
+      const STORAGE_KEY = "siem.jwt";
+      const EVENT_COLORS = {
+        "Battles": "#E53935",
+        "Explosions/Remote violence": "#FB8C00",
+        "Violence against civilians": "#880E4F",
+        "Protests": "#1E88E5",
+        "Riots": "#FDD835",
+        "Strategic developments": "#78909C",
+      };
+
+      const state = {
+        token: localStorage.getItem(STORAGE_KEY) || "",
+        latestDate: null,
+        dateStart: null,
+        dateEnd: null,
+        activeEventTypes: new Set(Object.keys(EVENT_COLORS)),
+        map: null,
+        sourceLoaded: false,
+        currentPopup: null,
+        allFeatures: null,
+      };
+
+      const loginWrap = document.getElementById("login-wrap");
+      const loginForm = document.getElementById("login-form");
+      const loginError = document.getElementById("login-error");
+      const loadingPill = document.getElementById("loading-pill");
+      const dateWindowLabel = document.getElementById("date-window-label");
+      const latestDateLabel = document.getElementById("latest-date-label");
+      const datePicker = document.getElementById("date-picker");
+      const filtersPanel = document.getElementById("filters-panel");
+      const filtersGrid = document.getElementById("filters-grid");
+      const logoutButton = document.getElementById("logout-btn");
+
+      function setLoading(isLoading) {
+        loadingPill.classList.toggle("hidden", !isLoading);
+      }
+
+      function formatDateLabel(value) {
+        return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" }).format(value);
+      }
+
+      function updateDateLabels() {
+        if (!state.dateStart || !state.dateEnd) return;
+        dateWindowLabel.textContent = `${formatDateLabel(state.dateStart)} – ${formatDateLabel(state.dateEnd)}`;
+        datePicker.value = state.dateEnd.toISOString().slice(0, 10);
+        const atLatest = state.latestDate && state.dateEnd >= state.latestDate;
+        document.getElementById("next-window").disabled = Boolean(atLatest);
+      }
+
+      function shiftWindow(days) {
+        state.dateStart = new Date(state.dateStart);
+        state.dateEnd = new Date(state.dateEnd);
+        state.dateStart.setUTCDate(state.dateStart.getUTCDate() + days);
+        state.dateEnd.setUTCDate(state.dateEnd.getUTCDate() + days);
+        if (state.latestDate && state.dateEnd > state.latestDate) {
+          state.dateEnd = new Date(state.latestDate);
+          state.dateStart = new Date(state.latestDate);
+          state.dateStart.setUTCDate(state.dateEnd.getUTCDate() - 6);
+        }
+        updateDateLabels();
+        fetchWindowEvents().catch(() => {});
+      }
+
+      function setWindowEndingOn(endDate) {
+        state.dateEnd = new Date(Date.UTC(endDate.getUTCFullYear(), endDate.getUTCMonth(), endDate.getUTCDate()));
+        state.dateStart = new Date(state.dateEnd);
+        state.dateStart.setUTCDate(state.dateEnd.getUTCDate() - 6);
+        updateDateLabels();
+        fetchWindowEvents().catch(() => {});
+      }
+
+      function authHeaders() {
+        return state.token ? { Authorization: `Bearer ${state.token}` } : {};
+      }
+
+      async function apiFetch(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            ...authHeaders(),
+            ...(options.headers || {}),
+          },
+        });
+
+        if (response.status === 401) {
+          handleUnauthorized();
+          throw new Error("Unauthorized");
+        }
+
+        if (!response.ok) {
+          const message = await response.text();
+          throw new Error(message || `Request failed: ${response.status}`);
+        }
+
+        return response;
+      }
+
+      function handleUnauthorized() {
+        localStorage.removeItem(STORAGE_KEY);
+        state.token = "";
+        loginWrap.classList.remove("hidden");
+        filtersPanel.classList.add("hidden");
+        logoutButton.classList.add("hidden");
+      }
+
+      function buildFilterChip(type, color) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "filter-chip";
+        button.innerHTML = `<span class="filter-dot" style="background:${color}"></span><span>${type}</span>`;
+        button.addEventListener("click", () => {
+          if (state.activeEventTypes.has(type)) {
+            state.activeEventTypes.delete(type);
+            button.classList.add("disabled");
+          } else {
+            state.activeEventTypes.add(type);
+            button.classList.remove("disabled");
+          }
+          applyClientFilter();
+        });
+        return button;
+      }
+
+      function renderFilters() {
+        filtersGrid.innerHTML = "";
+        Object.entries(EVENT_COLORS).forEach(([type, color]) => {
+          filtersGrid.appendChild(buildFilterChip(type, color));
+        });
+      }
+
+      async function loadMetadata() {
+        const response = await apiFetch("/api/v1/metadata");
+        const metadata = await response.json();
+        state.latestDate = metadata.latest_date ? new Date(`${metadata.latest_date}T00:00:00Z`) : new Date();
+        latestDateLabel.textContent = metadata.latest_date
+          ? `Data current as of ${metadata.latest_date}`
+          : "No events loaded yet";
+        setWindowEndingOn(state.latestDate);
+      }
+
+      function getActiveEventTypeParam() {
+        if (state.activeEventTypes.size === 0) return "";
+        if (state.activeEventTypes.size === Object.keys(EVENT_COLORS).length) return "";
+        return Array.from(state.activeEventTypes).join(",");
+      }
+
+      async function fetchWindowEvents() {
+        if (!state.dateStart || !state.dateEnd) return;
+        const params = new URLSearchParams({
+          date_start: state.dateStart.toISOString().slice(0, 10),
+          date_end: state.dateEnd.toISOString().slice(0, 10),
+        });
+        setLoading(true);
+        try {
+          const response = await apiFetch(`/api/v1/events?${params.toString()}`);
+          state.allFeatures = await response.json();
+        } finally {
+          setLoading(false);
+        }
+        applyClientFilter();
+      }
+
+      function applyClientFilter() {
+        if (!state.map || !state.allFeatures) return;
+        const source = state.map.getSource("events");
+        if (!source) return;
+        if (state.activeEventTypes.size === 0) {
+          source.setData({ type: "FeatureCollection", features: [] });
+          return;
+        }
+        if (state.activeEventTypes.size === Object.keys(EVENT_COLORS).length) {
+          source.setData(state.allFeatures);
+          return;
+        }
+        source.setData({
+          type: "FeatureCollection",
+          features: state.allFeatures.features.filter(
+            (f) => state.activeEventTypes.has(f.properties.event_type)
+          ),
+        });
+      }
+
+      function esc(str) {
+        if (!str) return "";
+        const el = document.createElement("span");
+        el.textContent = String(str);
+        return el.innerHTML;
+      }
+
+      function truncateNotes(text, limit) {
+        if (!text || text.length <= limit) return text || "No notes available.";
+        const id = "notes-" + Date.now();
+        return `<span id="${id}-short">${text.slice(0, limit)}… <a href="#" onclick="document.getElementById('${id}-short').style.display='none';document.getElementById('${id}-full').style.display='inline';return false" style="color:#1E88E5">more</a></span><span id="${id}-full" style="display:none">${text} <a href="#" onclick="document.getElementById('${id}-full').style.display='none';document.getElementById('${id}-short').style.display='inline';return false" style="color:#1E88E5">less</a></span>`;
+      }
+
+      async function showEventPopup(feature) {
+        const eventId = feature.properties.event_id_cnty;
+        const response = await apiFetch(`/api/v1/events/${eventId}`);
+        const event = await response.json();
+        const props = event.properties;
+        const html = `
+          <strong>${esc(props.event_type)}</strong><br />
+          <span>${esc(props.sub_event_type)}</span><br /><br />
+          <strong>Date:</strong> ${esc(props.event_date)}<br />
+          <strong>Location:</strong> ${[props.country, props.admin1, props.location].filter(Boolean).map(esc).join(" \u2192 ")}<br />
+          <strong>Actors:</strong> ${[props.actor1, props.actor2].filter(Boolean).map(esc).join(" vs ")}<br />
+          <strong>Fatalities:</strong> ${props.fatalities ?? 0}<br />
+          <strong>Source:</strong> ${esc(props.source) || "n/a"}<br /><br />
+          ${truncateNotes(esc(props.notes), 200)}
+        `;
+
+        if (state.currentPopup) {
+          state.currentPopup.remove();
+        }
+
+        state.currentPopup = new mapboxgl.Popup({ closeButton: true, maxWidth: "320px" })
+          .setLngLat(event.geometry.coordinates)
+          .setHTML(html)
+          .addTo(state.map);
+      }
+
+      function bootMap() {
+        if (!MAPBOX_TOKEN) {
+          loginError.textContent = "MAPBOX_ACCESS_TOKEN is not configured on the server.";
+          return;
+        }
+
+        mapboxgl.accessToken = MAPBOX_TOKEN;
+        state.map = new mapboxgl.Map({
+          container: "map",
+          style: MAPBOX_STYLE,
+          center: [0, 14],
+          zoom: 5,
+        });
+
+        state.map.on("load", () => {
+          state.map.addSource("events", {
+            type: "geojson",
+            data: { type: "FeatureCollection", features: [] },
+            cluster: true,
+            clusterMaxZoom: 14,
+            clusterRadius: 50,
+          });
+
+          state.map.addLayer({
+            id: "clusters",
+            type: "circle",
+            source: "events",
+            filter: ["has", "point_count"],
+            paint: {
+              "circle-color": "#d9e7ed",
+              "circle-opacity": 0.78,
+              "circle-stroke-color": "#07131b",
+              "circle-stroke-width": 2,
+              "circle-radius": [
+                "step",
+                ["get", "point_count"],
+                18,
+                20,
+                24,
+                50,
+                31,
+              ],
+            },
+          });
+
+          state.map.addLayer({
+            id: "cluster-count",
+            type: "symbol",
+            source: "events",
+            filter: ["has", "point_count"],
+            layout: {
+              "text-field": ["get", "point_count_abbreviated"],
+              "text-font": ["Open Sans Bold", "Arial Unicode MS Bold"],
+              "text-size": 12,
+            },
+            paint: {
+              "text-color": "#07131b",
+            },
+          });
+
+          state.map.addLayer({
+            id: "unclustered-point",
+            type: "circle",
+            source: "events",
+            filter: ["!", ["has", "point_count"]],
+            paint: {
+              "circle-color": [
+                "match",
+                ["get", "event_type"],
+                "Battles", "#E53935",
+                "Explosions/Remote violence", "#FB8C00",
+                "Violence against civilians", "#880E4F",
+                "Protests", "#1E88E5",
+                "Riots", "#FDD835",
+                "Strategic developments", "#78909C",
+                "#d9e7ed",
+              ],
+              "circle-radius": 5,
+              "circle-stroke-width": 1,
+              "circle-stroke-color": "#07131b",
+            },
+          });
+
+          state.map.on("click", "clusters", async (event) => {
+            const features = state.map.queryRenderedFeatures(event.point, { layers: ["clusters"] });
+            const clusterId = features[0].properties.cluster_id;
+            const zoom = await state.map.getSource("events").getClusterExpansionZoom(clusterId);
+            state.map.easeTo({ center: features[0].geometry.coordinates, zoom });
+          });
+
+          state.map.on("click", "unclustered-point", (event) => {
+            const [feature] = event.features || [];
+            if (feature) {
+              showEventPopup(feature);
+            }
+          });
+
+          applyClientFilter();
+        });
+      }
+
+      async function completeLogin(username, password) {
+        loginError.textContent = "";
+        setLoading(true);
+        try {
+          const response = await fetch("/api/v1/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password }),
+          });
+
+          if (!response.ok) {
+            throw new Error("Invalid credentials");
+          }
+
+          const data = await response.json();
+          state.token = data.token;
+          localStorage.setItem(STORAGE_KEY, data.token);
+          loginWrap.classList.add("hidden");
+          filtersPanel.classList.remove("hidden");
+          logoutButton.classList.remove("hidden");
+          await loadMetadata();
+          if (!state.map) {
+            bootMap();
+          } else {
+            fetchWindowEvents().catch(() => {});
+          }
+        } catch (error) {
+          loginError.textContent = error.message || "Unable to sign in.";
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      loginForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const formData = new FormData(loginForm);
+        completeLogin(String(formData.get("username") || ""), String(formData.get("password") || ""));
+      });
+
+      document.getElementById("prev-window").addEventListener("click", () => shiftWindow(-1));
+      document.getElementById("next-window").addEventListener("click", () => shiftWindow(1));
+      datePicker.addEventListener("change", (event) => {
+        if (event.target.value) {
+          setWindowEndingOn(new Date(`${event.target.value}T00:00:00Z`));
+        }
+      });
+      logoutButton.addEventListener("click", () => {
+        handleUnauthorized();
+        if (state.currentPopup) {
+          state.currentPopup.remove();
+        }
+      });
+
+      renderFilters();
+
+      if (state.token) {
+        loginWrap.classList.add("hidden");
+        filtersPanel.classList.remove("hidden");
+        logoutButton.classList.remove("hidden");
+        loadMetadata().then(bootMap).catch(() => {
+          handleUnauthorized();
+          loginError.textContent = "Session expired. Sign in again.";
+        });
+      }
+    </script>
+  </body>
+</html>

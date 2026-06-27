@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: siem-api
+  namespace: conflict-monitor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: siem-api
+  template:
+    metadata:
+      labels:
+        app: siem-api
+    spec:
+      securityContext:
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: siem-api:20260406-1
+          ports:
+            - containerPort: 80
+          envFrom:
+            - secretRef:
+                name: siem-db-credentials
+            - secretRef:
+                name: siem-app-credentials
+          readinessProbe:
+            httpGet:
+              path: /api/v1/healthz
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /api/v1/healthz
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]

@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: siem-api
+  namespace: conflict-monitor
+  # IMPORTANT: This Ingress terminates TLS via cert-manager (Let's Encrypt).
+  # If using Cloudflare proxy, set SSL/TLS mode to "Full" (not "Flexible").
+  # "Flexible" causes an infinite redirect loop because ssl-redirect is enabled.
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - example.com
+      secretName: siem-project-tls
+  rules:
+    - host: example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: siem-api
+                port:
+                  number: 80

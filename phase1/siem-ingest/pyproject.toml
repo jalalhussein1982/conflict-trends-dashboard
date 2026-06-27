@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "siem-ingest"
+version = "0.1.0"
+description = "ACLED ingestion tooling for the Sahel Information Environment Monitor"
+requires-python = ">=3.12"
+dependencies = [
+  "bcrypt>=4.1,<5",
+  "click>=8.1,<9",
+  "psycopg[binary]>=3.2,<4",
+  "requests>=2.32,<3",
+]
+
+[project.scripts]
+siem-ingest = "siem_ingest.cli:main"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+

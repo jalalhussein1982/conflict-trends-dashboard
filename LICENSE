@@ -1,0 +1,28 @@
+Copyright (c) 2026 Jalal Hussein. All rights reserved.
+
+This source code is published publicly for the sole purpose of demonstrating the
+author's software-engineering work to prospective employers and collaborators
+("portfolio review").
+
+Permission is granted ONLY to view and read this source code for evaluation
+purposes. No other rights are granted.
+
+Without the prior written permission of the copyright holder, you may NOT:
+  - copy, reproduce, or store the code beyond transient viewing in a browser;
+  - modify, adapt, translate, or create derivative works;
+  - use the code, in whole or in part, in any product or service, whether
+    commercial or non-commercial;
+  - redistribute, sublicense, sell, publish, or host the code, in whole or part.
+
+No license to any patent, trademark, trade name, or other intellectual-property
+right is granted, whether express, implied, by estoppel, or otherwise.
+
+This repository contains NO ACLED data. ACLED (Armed Conflict Location & Event
+Data) is licensed separately by ACLED (https://acleddata.com) under its own terms.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR OR
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

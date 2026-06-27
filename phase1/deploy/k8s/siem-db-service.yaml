@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: siem-db-rw
+  namespace: conflict-monitor
+spec:
+  type: ClusterIP
+  selector:
+    app: siem-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+

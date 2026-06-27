@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: acled-bulk-load
+  namespace: conflict-monitor
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      securityContext:
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: ingest
+          image: siem-ingest:20260406-1
+          args: ["bulk-load", "--date-from", "2019-01-01"]
+          envFrom:
+            - secretRef:
+                name: acled-credentials
+            - secretRef:
+                name: siem-db-credentials
+            - secretRef:
+                name: siem-app-credentials
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
