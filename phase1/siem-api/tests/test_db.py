@@ -13,18 +13,18 @@ class FakeCursor:
     def __init__(self) -> None:
         self.rows = [
             {
-                "event_id_cnty": "BFO12345",
+                "event_id_cnty": "EVT00001",
                 "event_date": date(2025, 11, 15),
                 "event_type": "Battles",
                 "sub_event_type": "Armed clash",
-                "actor1": "Military Forces of Burkina Faso",
-                "actor2": "JNIM",
+                "actor1": "Country X Armed Forces",
+                "actor2": "Group Y",
                 "fatalities": 12,
-                "country": "Burkina Faso",
-                "admin1": "Sahel",
-                "location": "Djibo",
-                "longitude": -1.6306,
-                "latitude": 14.0992,
+                "country": "Country X",
+                "admin1": "Province A",
+                "location": "Townsville",
+                "longitude": -2.5000,
+                "latitude": 10.5000,
             }
         ]
 
@@ -85,7 +85,7 @@ class PostgresDatabaseTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(len(records), 1)
-        self.assertEqual(records[0]["event_id_cnty"], "BFO12345")
+        self.assertEqual(records[0]["event_id_cnty"], "EVT00001")
 
 
 if __name__ == "__main__":

@@ -37,32 +37,32 @@ class FakeDatabase:
             return []
         return [
             {
-                "event_id_cnty": "BFO12345",
+                "event_id_cnty": "EVT00001",
                 "event_type": "Battles",
                 "fatalities": 12,
-                "longitude": -1.6306,
-                "latitude": 14.0992,
+                "longitude": -2.5000,
+                "latitude": 10.5000,
             }
         ]
 
     async def fetch_event(self, event_id: str) -> dict[str, object] | None:
-        if event_id != "BFO12345":
+        if event_id != "EVT00001":
             return None
         return {
-            "event_id_cnty": "BFO12345",
+            "event_id_cnty": "EVT00001",
             "event_date": date(2025, 11, 15),
             "event_type": "Battles",
             "sub_event_type": "Armed clash",
-            "actor1": "Military Forces of Burkina Faso",
-            "actor2": "JNIM",
+            "actor1": "Country X Armed Forces",
+            "actor2": "Group Y",
             "fatalities": 12,
-            "country": "Burkina Faso",
-            "admin1": "Sahel",
-            "location": "Djibo",
-            "source": "ACLED",
+            "country": "Country X",
+            "admin1": "Province A",
+            "location": "Townsville",
+            "source": "ExampleSource",
             "notes": "Detailed notes",
-            "longitude": -1.6306,
-            "latitude": 14.0992,
+            "longitude": -2.5000,
+            "latitude": 10.5000,
         }
 
     async def fetch_metadata(self) -> dict[str, object]:
@@ -139,8 +139,8 @@ class AppTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()
         self.assertEqual(payload["type"], "FeatureCollection")
-        self.assertEqual(payload["features"][0]["geometry"]["coordinates"], [-1.6306, 14.0992])
-        self.assertEqual(payload["features"][0]["properties"]["event_id_cnty"], "BFO12345")
+        self.assertEqual(payload["features"][0]["geometry"]["coordinates"], [-2.5000, 10.5000])
+        self.assertEqual(payload["features"][0]["properties"]["event_id_cnty"], "EVT00001")
         self.assertEqual(payload["features"][0]["properties"]["event_type"], "Battles")
 
     def test_metadata_returns_summary_for_authorized_request(self) -> None:
