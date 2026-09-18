@@ -23,6 +23,7 @@ An interactive **geospatial dashboard** that monitors **34,681 ACLED conflict ev
 - **Conflict-trends analytics** — event frequency, lethality, and actor-composition explored over configurable time windows.
 - **Production deployment** — fully **Dockerized** and shipped to **Kubernetes**: a PostgreSQL + PostGIS StatefulSet, the API as a Deployment behind an Ingress/TLS, and ingestion as scheduled Jobs/CronJobs.
 - **Single-page frontend** — a static SPA served by the API, with the Mapbox token injected server-side (never committed to the client).
+- **MCP server (September 2026)** — `phase1/siem-mcp` exposes the same analytics to AI agents over the Model Context Protocol: nine typed tools (trend, lethality, actors, hotspots, bounding-box and radius queries, ingestion freshness), three resources and a brief-writing prompt, on a synthetic store by default and PostGIS in live mode. Python MCP SDK 2.x, protocol 2026-07-28, 12 in-memory protocol tests.
 
 ## Architecture
 
@@ -51,6 +52,7 @@ An interactive **geospatial dashboard** that monitors **34,681 ACLED conflict ev
 | Ingestion | Python, `click` CLI, `requests` (ACLED OAuth API) |
 | Frontend | Mapbox GL JS, vanilla-JS SPA |
 | Ops | Docker, Kubernetes (StatefulSet, Deployment, Ingress, CronJobs) |
+| Agent interface | MCP (Python SDK 2.x, protocol 2026-07-28), stdio |
 
 ## Repository layout
 
@@ -63,6 +65,9 @@ phase1/
   siem-ingest/     ACLED ingestion pipeline
     src/siem_ingest/  acled_api, transform, db, cli
     tests/         transform unit tests
+  siem-mcp/        MCP server over the analytics (synthetic store or live PostGIS)
+    src/siem_mcp/  server, store (SQLite + PostGIS backends), synth (generator)
+    tests/         in-memory MCP protocol tests
   deploy/
     k8s/           Kubernetes manifests (DB StatefulSet, API, Ingress, CronJobs)
     sql/           schema / init

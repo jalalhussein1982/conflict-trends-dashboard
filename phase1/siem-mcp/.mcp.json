@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "siem": {
+      "command": ".venv/bin/siem-mcp",
+      "args": [],
+      "env": {}
+    }
+  }
+}

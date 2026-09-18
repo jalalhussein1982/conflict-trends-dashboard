@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "siem-mcp"
+version = "0.1.0"
+description = "MCP server over the Sahel Information Environment Monitor: conflict-event analytics for coding and research agents"
+requires-python = ">=3.12"
+dependencies = [
+  "mcp[cli]>=2.2,<3",
+]
+
+[project.optional-dependencies]
+postgres = [
+  "psycopg[binary]>=3.2,<4",
+]
+test = [
+  "pytest>=8",
+  "anyio>=4",
+]
+
+[project.scripts]
+siem-mcp = "siem_mcp.server:main"
+
+[tool.setuptools.package-dir]
+"" = "src"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
